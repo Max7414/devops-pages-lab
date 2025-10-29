@@ -1,8 +1,6 @@
 name: Update Activity Log
 
 on:
-  schedule:
-    - cron: "0 12 * * 1-5" # Weekday update at 12:00 UTC
   workflow_dispatch:
   push:
     branches: [main]
