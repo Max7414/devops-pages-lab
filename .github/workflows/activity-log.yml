@@ -28,7 +28,6 @@ jobs:
           script: |
             const fs = require('fs');
             const path = require('path');
-            const core = require('@actions/core');
 
             const username = process.env.GITHUB_REPOSITORY_OWNER;
             const maxEvents = Number(process.env.MAX_EVENTS || 10);
