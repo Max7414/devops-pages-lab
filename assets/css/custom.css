@@ -1,0 +1,63 @@
+:root {
+  --brand-primary: #1d4ed8;
+  --brand-accent: #f59e0b;
+  --text-color: #1f2933;
+  --bg-color: #f8fafc;
+}
+
+body {
+  background: var(--bg-color);
+  color: var(--text-color);
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.7;
+  padding: 2rem 0;
+}
+
+h1,
+h2,
+h3 {
+  color: var(--brand-primary);
+  border-bottom: 2px solid rgba(29, 78, 216, 0.1);
+  padding-bottom: 0.25rem;
+  margin-top: 2.5rem;
+}
+
+a {
+  color: var(--brand-primary);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(29, 78, 216, 0.35);
+}
+
+a:hover {
+  color: var(--brand-accent);
+  border-bottom-color: var(--brand-accent);
+}
+
+.activity-highlight {
+  background: #fff;
+  border-left: 4px solid var(--brand-accent);
+  padding: 1rem 1.25rem;
+  margin: 1.5rem 0;
+  box-shadow: 0 10px 30px rgba(31, 41, 51, 0.08);
+  border-radius: 12px;
+}
+
+.hero {
+  background: linear-gradient(135deg, rgba(29, 78, 216, 0.12), rgba(245, 158, 11, 0.12));
+  border: 1px solid rgba(29, 78, 216, 0.15);
+  border-radius: 16px;
+  padding: 1.75rem 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 20px 40px rgba(31, 41, 51, 0.08);
+}
+
+.hero h1 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+}
+
+.hero p {
+  margin: 0;
+  font-size: 1.05rem;
+  color: rgba(31, 41, 51, 0.85);
+}
