@@ -8,6 +8,7 @@ title: Home
   <p>Automated activity dashboards and Pages deployments for the 2025 DevOps course.</p>
 </section>
 
+{% capture readme_content %}{% include_relative README.md %}{% endcapture %}
 <div class="activity-highlight">
-{% include_relative README.md %}
+{{ readme_content | markdownify }}
 </div>
