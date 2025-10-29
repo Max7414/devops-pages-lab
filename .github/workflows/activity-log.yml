@@ -100,13 +100,13 @@ jobs:
             );
 
             if (updated === original) {
-              core.setOutput('changed', 'false');
-              core.info('No changes to activity section.');
-            } else {
-              fs.writeFileSync(readmePath, updated);
-              core.setOutput('changed', 'true');
-              core.info('Activity section updated.');
+              console.log('No changes to activity section.');
+              return { changed: 'false' };
             }
+
+            fs.writeFileSync(readmePath, updated);
+            console.log('Activity section updated.');
+            return { changed: 'true' };
 
       - name: Commit updated activity
         if: steps.activity.outputs.changed == 'true'
