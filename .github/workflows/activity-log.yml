@@ -1,0 +1,118 @@
+name: Update Activity Log
+
+on:
+  schedule:
+    - cron: "0 12 * * 1-5" # Weekday update at 12:00 UTC
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  refresh-activity:
+    runs-on: ubuntu-latest
+    env:
+      MAX_EVENTS: "10"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate activity content
+        id: activity
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.TOKEN != '' && secrets.TOKEN || secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const core = require('@actions/core');
+
+            const username = process.env.GITHUB_REPOSITORY_OWNER;
+            const maxEvents = Number(process.env.MAX_EVENTS || 10);
+            const markerStart = '<!-- ACTIVITY-LOG:START -->';
+            const markerEnd = '<!-- ACTIVITY-LOG:END -->';
+
+            function formatDate(iso) {
+              return new Date(iso).toISOString().split('T')[0];
+            }
+
+            function summarise(event) {
+              const repo = event.repo?.name ?? '';
+              const created = formatDate(event.created_at);
+
+              switch (event.type) {
+                case 'PushEvent': {
+                  const branch = event.payload.ref?.split('/').slice(2).join('/') ?? '';
+                  const commitCount = event.payload.commits?.length ?? 0;
+                  return `- ${created}: Pushed ${commitCount} commit(s) to \`${repo}@${branch}\``;
+                }
+                case 'PullRequestEvent': {
+                  const pr = event.payload.pull_request;
+                  const action = event.payload.action;
+                  return `- ${created}: ${action} pull request [#${pr.number}](${pr.html_url}) on \`${repo}\``;
+                }
+                case 'IssuesEvent': {
+                  const issue = event.payload.issue;
+                  const action = event.payload.action;
+                  return `- ${created}: ${action} issue [#${issue.number}](${issue.html_url}) on \`${repo}\``;
+                }
+                case 'IssueCommentEvent': {
+                  const issue = event.payload.issue;
+                  return `- ${created}: Commented on [#${issue.number}](${issue.html_url}) in \`${repo}\``;
+                }
+                case 'CreateEvent': {
+                  const refType = event.payload.ref_type;
+                  const ref = event.payload.ref ? ` ${event.payload.ref}` : '';
+                  return `- ${created}: Created ${refType}${ref} in \`${repo}\``;
+                }
+                case 'ReleaseEvent': {
+                  const action = event.payload.action;
+                  const release = event.payload.release?.tag_name ?? '';
+                  return `- ${created}: ${action} release \`${release}\` in \`${repo}\``;
+                }
+                default:
+                  return `- ${created}: ${event.type.replace(/Event$/, '')} activity in \`${repo}\``;
+              }
+            }
+
+            const { data } = await github.request('GET /users/{username}/events/public', {
+              username,
+              per_page: 30,
+            });
+
+            const summaries = data
+              .map(summarise)
+              .filter(Boolean)
+              .slice(0, maxEvents);
+
+            const activityBlock = summaries.length
+              ? summaries.join('\n')
+              : '- No public activity found for this period.';
+
+            const readmePath = path.join(process.env.GITHUB_WORKSPACE, 'README.md');
+            const original = fs.readFileSync(readmePath, 'utf8');
+            const blockRegex = new RegExp(`${markerStart}[\\s\\S]*?${markerEnd}`);
+            const updated = original.replace(
+              blockRegex,
+              `${markerStart}\n${activityBlock}\n${markerEnd}`
+            );
+
+            if (updated === original) {
+              core.setOutput('changed', 'false');
+              core.info('No changes to activity section.');
+            } else {
+              fs.writeFileSync(readmePath, updated);
+              core.setOutput('changed', 'true');
+              core.info('Activity section updated.');
+            }
+
+      - name: Commit updated activity
+        if: steps.activity.outputs.changed == 'true'
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "docs: refresh activity log"
+          file_pattern: README.md
+          commit_author: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
